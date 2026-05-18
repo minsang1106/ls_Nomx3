@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>학식 원격 주문 · CampusEat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ============== 헤더 ============== -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button class="brand" id="brandBtn" type="button">
+        <span class="brand-mark">🍚</span>
+        <span class="brand-text">CampusEat</span>
+      </button>
+      <nav class="stepper" id="stepper" aria-label="주문 단계">
+        <span class="step is-active" data-step="cafeteria">1 · 식당</span>
+        <span class="step" data-step="menu">2 · 메뉴</span>
+        <span class="step" data-step="slot">3 · 픽업</span>
+        <span class="step" data-step="payment">4 · 결제</span>
+        <span class="step" data-step="done">5 · 완료</span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- ============== 1. 식당 선택 ============== -->
+    <section class="view is-active" data-view="cafeteria">
+      <div class="hero">
+        <div class="hero-text">
+          <p class="eyebrow">점심시간이 줄어드나요?</p>
+          <h1>줄 서지 않는<br/>학식의 시작.</h1>
+          <p class="hero-sub">원하는 시간대를 골라 주문하면, 카운터를 거치지 않고 바로 픽업할 수 있어요.</p>
+        </div>
+        <div class="hero-card">
+          <div class="hero-card-row">
+            <span>오늘 픽업 가능</span><strong id="todayPickupable">312건</strong>
+          </div>
+          <div class="hero-card-row">
+            <span>현재 운영중 식당</span><strong id="openCafCount">4곳</strong>
+          </div>
+          <div class="hero-card-row">
+            <span>평균 대기 절감</span><strong>−18분</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2>식당 선택</h2>
+        <div class="filters">
+          <button class="chip is-active" data-filter="all">전체</button>
+          <button class="chip" data-filter="open">운영중</button>
+          <button class="chip" data-filter="korean">한식</button>
+          <button class="chip" data-filter="snack">간편식</button>
+        </div>
+      </div>
+
+      <div class="grid" id="cafeteriaGrid"><!-- JS 렌더링 --></div>
+    </section>
+
+    <!-- ============== 2. 메뉴 ============== -->
+    <section class="view" data-view="menu">
+      <button class="back-btn" data-back="cafeteria">← 식당 다시 선택</button>
+
+      <div class="menu-header">
+        <div>
+          <h2 id="menuCafName">학생회관 1층 한식당</h2>
+          <p class="menu-sub" id="menuCafMeta">위치 · 운영시간</p>
+        </div>
+        <div class="open-badge" id="menuCafBadge">운영중</div>
+      </div>
+
+      <div class="menu-layout">
+        <div class="menu-list">
+          <div class="cat-tabs" id="catTabs"><!-- JS --></div>
+          <div id="menuGrid"><!-- JS --></div>
+        </div>
+
+        <aside class="cart">
+          <div class="cart-head">
+            <h3>장바구니</h3>
+            <span class="cart-count" id="cartCount">0개</span>
+          </div>
+          <div class="cart-body" id="cartBody">
+            <p class="cart-empty">메뉴를 선택해주세요.</p>
+          </div>
+          <div class="cart-foot">
+            <div class="cart-total">
+              <span>총 결제 예상금액</span>
+              <strong id="cartTotal">0원</strong>
+            </div>
+            <button class="primary-btn" id="goSlotBtn" disabled>픽업 시간 선택 →</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============== 3. 픽업 시간대 ============== -->
+    <section class="view" data-view="slot">
+      <button class="back-btn" data-back="menu">← 메뉴로 돌아가기</button>
+      <h2>픽업 시간대 선택</h2>
+      <p class="muted">혼잡을 줄이기 위해 시간대별 최대 주문 수가 제한돼요. 회색 칸은 마감된 시간이에요.</p>
+
+      <div class="slot-grid" id="slotGrid"><!-- JS --></div>
+
+      <div class="slot-cta">
+        <div>
+          <span class="muted">선택한 시간</span>
+          <strong id="pickedSlotLabel">미선택</strong>
+        </div>
+        <button class="primary-btn" id="goPaymentBtn" disabled>결제로 이동 →</button>
+      </div>
+    </section>
+
+    <!-- ============== 4. 결제 ============== -->
+    <section class="view" data-view="payment">
+      <button class="back-btn" data-back="slot">← 픽업시간 다시 선택</button>
+      <h2>결제</h2>
+
+      <div class="pay-layout">
+        <div class="pay-main">
+          <div class="card">
+            <h3>주문 요약</h3>
+            <ul class="summary-list" id="summaryList"></ul>
+            <div class="summary-foot">
+              <span>합계</span><strong id="summaryTotal">0원</strong>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>픽업 정보</h3>
+            <p class="kv"><span>식당</span><strong id="payCaf">-</strong></p>
+            <p class="kv"><span>픽업 시간</span><strong id="paySlot">-</strong></p>
+            <p class="kv"><span>예상 주문번호</span><strong id="payOrderNo">-</strong></p>
+          </div>
+
+          <div class="card">
+            <h3>결제 수단</h3>
+            <div class="pay-methods">
+              <label class="pay-method"><input type="radio" name="pm" value="card" checked /><span>신용/체크카드</span></label>
+              <label class="pay-method"><input type="radio" name="pm" value="campus"/><span>학생증 캠퍼스페이</span></label>
+              <label class="pay-method"><input type="radio" name="pm" value="kakao"/><span>카카오페이</span></label>
+              <label class="pay-method"><input type="radio" name="pm" value="account"/><span>계좌이체</span></label>
+            </div>
+          </div>
+        </div>
+
+        <aside class="pay-side">
+          <div class="card sticky">
+            <h3>결제 금액</h3>
+            <p class="kv"><span>상품 금액</span><span id="paySub">0원</span></p>
+            <p class="kv"><span>할인</span><span>0원</span></p>
+            <hr/>
+            <p class="kv big"><span>최종 결제</span><strong id="payFinal">0원</strong></p>
+            <button class="primary-btn lg" id="payBtn">결제하기</button>
+            <p class="muted xs">픽업 시간 5분 전까지 취소할 수 있어요.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============== 5. 완료 ============== -->
+    <section class="view" data-view="done">
+      <div class="done-card">
+        <div class="done-check">✓</div>
+        <h2>주문이 완료됐어요</h2>
+        <p class="muted">아래 주문번호를 픽업창구에서 보여주세요.</p>
+
+        <div class="order-no" id="doneOrderNo">A-0000</div>
+
+        <div class="done-info">
+          <p class="kv"><span>식당</span><strong id="doneCaf">-</strong></p>
+          <p class="kv"><span>픽업 시간</span><strong id="doneSlot">-</strong></p>
+          <p class="kv"><span>결제 금액</span><strong id="donePay">-</strong></p>
+        </div>
+
+        <button class="primary-btn" id="restartBtn">처음으로</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>© 2026 CampusEat · 학식 원격 주문 서비스 (프로토타입)</span>
+  </footer>
+
+  <!-- 결제 처리중 오버레이 -->
+  <div class="overlay" id="overlay" hidden>
+    <div class="spinner"></div>
+    <p>결제를 처리하고 있어요…</p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
