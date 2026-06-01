@@ -1,93 +1,12 @@
 // =============================================
 //  CampusEat — 학식 원격 주문 프로토타입
-//  단순한 in-memory 데이터로 흐름을 시연
+//  Flask API와 MySQL 데이터를 사용
 // =============================================
 
 const won = n => n.toLocaleString('ko-KR') + '원';
 
-// ---- Mock 데이터: CAFETERIA / MENU / PICKUP_SLOT ----
-const CAFETERIAS = [
-  {
-    id: 1, name: '학생회관 1층 한식당', location: '학생회관 1F',
-    opening: '11:00', closing: '14:00',
-    category: ['korean', 'open'], cover: '#FFD3BF',
-    emoji: '🍚', tagline: '오늘의 백반 · 김치찌개',
-  },
-  {
-    id: 2, name: '제2학생식당 면류코너', location: '제2학생회관 B1',
-    opening: '11:30', closing: '14:30',
-    category: ['korean', 'open'], cover: '#FFE2C2',
-    emoji: '🍜', tagline: '잔치국수 · 비빔국수',
-  },
-  {
-    id: 3, name: '카페테리아 스낵바', location: '도서관 1F',
-    opening: '10:00', closing: '20:00',
-    category: ['snack', 'open'], cover: '#FFF1D6',
-    emoji: '🥪', tagline: '샌드위치 · 베이커리',
-  },
-  {
-    id: 4, name: '교직원식당 양식코너', location: '본관 4F',
-    opening: '11:30', closing: '13:30',
-    category: ['open'], cover: '#E6E1FF',
-    emoji: '🍝', tagline: '파스타 · 리조또',
-  },
-  {
-    id: 5, name: '기숙사식당', location: '제1생활관 1F',
-    opening: '18:00', closing: '20:00',
-    category: ['korean'], cover: '#E8E4DA',
-    emoji: '🍱', tagline: '저녁식사 전용 · 현재 마감',
-    closed: true,
-  },
-];
-
-const MENUS = {
-  1: [
-    { id: 101, name: '제육볶음 정식', cat: '정식', price: 6500, desc: '매콤한 제육과 잡곡밥, 미역국', emoji: '🍱' },
-    { id: 102, name: '김치찌개 정식', cat: '정식', price: 5500, desc: '얼큰한 김치찌개 한 그릇', emoji: '🍲' },
-    { id: 103, name: '돈까스 정식', cat: '정식', price: 7000, desc: '바삭한 등심돈까스', emoji: '🍛' },
-    { id: 104, name: '비빔밥', cat: '단품', price: 5000, desc: '계란 후라이 · 고추장', emoji: '🥗' },
-    { id: 105, name: '공깃밥 추가', cat: '사이드', price: 1000, desc: '잡곡밥', emoji: '🍚' },
-    { id: 106, name: '계란후라이', cat: '사이드', price: 800, desc: '반숙/완숙', emoji: '🍳', sold: true },
-  ],
-  2: [
-    { id: 201, name: '잔치국수', cat: '국수', price: 4000, desc: '멸치육수 베이스', emoji: '🍜' },
-    { id: 202, name: '비빔국수', cat: '국수', price: 4500, desc: '매콤달콤 비빔', emoji: '🍝' },
-    { id: 203, name: '우동', cat: '국수', price: 4500, desc: '가츠오부시 베이스', emoji: '🍲' },
-    { id: 204, name: '김밥', cat: '사이드', price: 3000, desc: '야채김밥 · 참치김밥', emoji: '🍙' },
-  ],
-  3: [
-    { id: 301, name: '클럽 샌드위치', cat: '샌드위치', price: 4800, desc: '햄 · 치즈 · 토마토', emoji: '🥪' },
-    { id: 302, name: 'BLT 샌드위치', cat: '샌드위치', price: 5200, desc: '베이컨 · 양상추 · 토마토', emoji: '🥖' },
-    { id: 303, name: '아메리카노', cat: '음료', price: 2500, desc: 'HOT / ICE', emoji: '☕' },
-    { id: 304, name: '초코칩 쿠키', cat: '베이커리', price: 2000, desc: '갓 구운 쿠키', emoji: '🍪' },
-  ],
-  4: [
-    { id: 401, name: '크림 파스타', cat: '파스타', price: 8500, desc: '베이컨 크림', emoji: '🍝' },
-    { id: 402, name: '토마토 파스타', cat: '파스타', price: 8000, desc: '바질토마토', emoji: '🍝' },
-    { id: 403, name: '버섯 리조또', cat: '리조또', price: 8800, desc: '양송이 · 표고', emoji: '🍚' },
-  ],
-  5: [],
-};
-
-// ---- 픽업 슬롯 (식당별로 동일 패턴 — 시연용) ----
-function makeSlots(caf) {
-  const slots = [];
-  const [oh, om] = caf.opening.split(':').map(Number);
-  const [ch, cm] = caf.closing.split(':').map(Number);
-  let t = oh * 60 + om;
-  const end = ch * 60 + cm;
-  let i = 0;
-  while (t < end) {
-    const next = t + 20;
-    const start = `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
-    const e = `${String(Math.floor(next/60)).padStart(2,'0')}:${String(next%60).padStart(2,'0')}`;
-    const max = 25;
-    const used = [22, 14, 25, 6, 10, 19, 24, 3, 12, 8][i % 10];
-    slots.push({ id: caf.id * 100 + i, start, end: e, max, used });
-    t = next; i++;
-  }
-  return slots;
-}
+let CAFETERIAS = [];
+let MENUS = {};
 
 // ---- 앱 상태 ----
 const state = {
@@ -100,6 +19,49 @@ const state = {
   paymentMethod: 'card',
   orderNumber: null,
 };
+
+// ---- API ----
+async function apiGet(path) {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`API 요청 실패: ${path}`);
+  return res.json();
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `API 요청 실패: ${path}`);
+  return data;
+}
+
+async function loadCafeterias() {
+  try {
+    CAFETERIAS = await apiGet('/api/cafeterias');
+  } catch (err) {
+    console.warn(err);
+  }
+}
+
+async function loadMenus(cafeteriaId) {
+  try {
+    MENUS[cafeteriaId] = await apiGet(`/api/cafeterias/${cafeteriaId}/menus`);
+  } catch (err) {
+    console.warn(err);
+  }
+}
+
+async function loadSlots(cafeteriaId) {
+  try {
+    return await apiGet(`/api/cafeterias/${cafeteriaId}/slots`);
+  } catch (err) {
+    console.warn(err);
+    return [];
+  }
+}
 
 // ---- 유틸 ----
 const $  = sel => document.querySelector(sel);
@@ -162,9 +124,10 @@ function renderCafeterias() {
 // =============================================
 // 2. 메뉴 화면
 // =============================================
-function openCafeteria(caf) {
+async function openCafeteria(caf) {
   state.caf = caf;
   state.cart = [];
+  await loadMenus(caf.id);
   $('#menuCafName').textContent = caf.name;
   $('#menuCafMeta').textContent = `${caf.location} · 운영시간 ${caf.opening}–${caf.closing}`;
   $('#menuCafBadge').textContent = caf.closed ? '마감' : '운영중';
@@ -278,9 +241,9 @@ function renderCart() {
 // =============================================
 // 3. 픽업 슬롯
 // =============================================
-function renderSlots() {
+async function renderSlots() {
   const caf = state.caf;
-  const slots = makeSlots(caf);
+  const slots = await loadSlots(caf.id);
   $('#slotGrid').innerHTML = slots.map(s => {
     const remain = s.max - s.used;
     const ratio = s.used / s.max;
@@ -338,17 +301,26 @@ function generateOrderPreview() {
 // =============================================
 // 5. 완료
 // =============================================
-function completeOrder() {
+async function completeOrder() {
   $('#overlay').hidden = false;
-  setTimeout(() => {
+  try {
+    const result = await apiPost('/api/orders', {
+      cafeteriaId: state.caf.id,
+      slotId: state.slot.id,
+      paymentMethod: state.paymentMethod,
+      items: state.cart.map(c => ({ menuId: c.menuId, qty: c.qty })),
+    });
     $('#overlay').hidden = true;
-    state.orderNumber = $('#payOrderNo').textContent;
+    state.orderNumber = result.orderNumber;
     $('#doneOrderNo').textContent = state.orderNumber;
     $('#doneCaf').textContent = state.caf.name;
     $('#doneSlot').textContent = state.slot.label;
-    $('#donePay').textContent = won(cartTotal());
+    $('#donePay').textContent = won(result.totalPrice || cartTotal());
     setView('done');
-  }, 1200);
+  } catch (err) {
+    $('#overlay').hidden = true;
+    alert(`주문 처리에 실패했어요.\n${err.message}`);
+  }
 }
 
 function resetAll() {
@@ -362,7 +334,8 @@ function resetAll() {
 // =============================================
 // 이벤트 바인딩
 // =============================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadCafeterias();
   renderCafeterias();
   renderCart();
 
@@ -381,8 +354,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 메뉴 → 픽업
-  $('#goSlotBtn').addEventListener('click', () => {
-    renderSlots();
+  $('#goSlotBtn').addEventListener('click', async () => {
+    await renderSlots();
     setView('slot');
   });
 
